@@ -35,8 +35,9 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)     
     // data base collection here
 
-    const apartmentCollection=client.db("onebuildDB").collection('apartment')
-    const agreementCollection=client.db("onebuildDB").collection('agreement')
+    const apartmentCollection=client.db("onebuildDB").collection('apartment');
+    const agreementCollection=client.db("onebuildDB").collection('agreement');
+    const userCollection=client.db("onebuildDB").collection('user')
 
 
     app.get('/apartment',async(req,res)=>{
@@ -44,13 +45,21 @@ async function run() {
         res.send(result)
     })
 
-
     app.post('/agreement',async(req,res)=>{
-     
       const find=await agreementCollection.findOne({email:req.body.email})
       if(find)return res.send({message:'already added'})
       const result=await agreementCollection.insertOne(req.body)
       res.send(result)
+    })
+
+
+
+    // user data here
+    app.post('/user',async(req,res)=>{
+       const user=req.body;
+       console.log(user)
+       const result=await userCollection.insertOne(user) 
+       res.send(result)
     })
 
 
