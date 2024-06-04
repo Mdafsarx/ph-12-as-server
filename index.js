@@ -3,7 +3,8 @@ const express=require('express');
 const cors=require('cors')
 const app=express()
 const port=process.env.PORT||1000;
-app.use(cors())
+app.use(cors());
+app.use(express.json())
 
 
 app.use(
@@ -31,17 +32,25 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-     
+    // Connect the client to the server	(optional starting in v4.7)     
     // data base collection here
 
     const apartmentCollection=client.db("onebuildDB").collection('apartment')
+    const agreementCollection=client.db("onebuildDB").collection('agreement')
 
 
     app.get('/apartment',async(req,res)=>{
         const result=await apartmentCollection.find().toArray();
         res.send(result)
+    })
+
+
+    app.post('/agreement',async(req,res)=>{
+     
+      const find=await agreementCollection.findOne({email:req.body.email})
+      if(find)return res.send({message:'already added'})
+      const result=await agreementCollection.insertOne(req.body)
+      res.send(result)
     })
 
 
@@ -58,7 +67,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
