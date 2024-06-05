@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express=require('express');
 const cors=require('cors')
 const app=express()
@@ -37,6 +37,7 @@ async function run() {
 
     const apartmentCollection=client.db("onebuildDB").collection('apartment');
     const agreementCollection=client.db("onebuildDB").collection('agreement');
+    const agreementCollectionAdmin=client.db("onebuildDB").collection('agreementAdmin');
     const userCollection=client.db("onebuildDB").collection('user')
     const announcementCollection=client.db("onebuildDB").collection('announcement')
 
@@ -54,6 +55,41 @@ async function run() {
       const result=await agreementCollection.insertOne(req.body)
       res.send(result)
     })
+    app.post('/agreementAdmin',async(req,res)=>{
+      const find=await agreementCollection.findOne({email:req.body.email})
+      const find2=await agreementCollectionAdmin.findOne({email:req.body.email})
+      if(find&&find2)return res.send({message:'already added'})
+      const result=await agreementCollectionAdmin.insertOne(req.body)
+      res.send(result)
+    })
+
+    app.delete('/agreementAdmin',async(req,res)=>{
+        const result=await agreementCollectionAdmin.deleteOne({_id:new ObjectId(req.query.id)});
+        res.send(result)
+    })
+
+    app.put('/agreement',async(req,res)=>{
+      const filter={email:req.query.email};
+      const updateDoc={
+        $set:{
+          status:req.body.status
+        }
+      }
+      const result=await agreementCollection.updateOne(filter,updateDoc);
+      res.send(result)
+    })
+    app.get('/agreement',async(req,res)=>{
+      const result=await agreementCollection.find().toArray();
+      res.send(result)
+    })
+    app.get('/agreementAdmin',async(req,res)=>{
+      const result=await agreementCollectionAdmin.find().toArray();
+      res.send(result)
+    })
+
+
+
+
 
     // user 
     app.post('/user',async(req,res)=>{
@@ -63,6 +99,16 @@ async function run() {
        const result=await userCollection.insertOne(user) 
        res.send(result)
     })
+    app.put('/user',async(req,res)=>{
+       const updateDoc={
+        $set:{
+          userRole:req.body.Role
+        }
+       }
+       const result=await userCollection.updateOne({email:req.query.email},updateDoc);
+       res.send(result)
+    })
+
 
 
     // announcement
