@@ -38,13 +38,16 @@ async function run() {
     const apartmentCollection=client.db("onebuildDB").collection('apartment');
     const agreementCollection=client.db("onebuildDB").collection('agreement');
     const userCollection=client.db("onebuildDB").collection('user')
+    const announcementCollection=client.db("onebuildDB").collection('announcement')
 
 
+    // apartment
     app.get('/apartment',async(req,res)=>{
         const result=await apartmentCollection.find().toArray();
         res.send(result)
     })
 
+    // agreement
     app.post('/agreement',async(req,res)=>{
       const find=await agreementCollection.findOne({email:req.body.email})
       if(find)return res.send({message:'already added'})
@@ -52,13 +55,19 @@ async function run() {
       res.send(result)
     })
 
-
-
-    // user data here
+    // user 
     app.post('/user',async(req,res)=>{
        const user=req.body;
-       console.log(user)
+       const find=await userCollection.findOne({email:user.email})
+       if(find)return res.send({message:'this user was already added'})
        const result=await userCollection.insertOne(user) 
+       res.send(result)
+    })
+
+
+    // announcement
+    app.post('/announcement',async(req,res)=>{
+       const result=await announcementCollection.insertOne(req.body);
        res.send(result)
     })
 
