@@ -108,6 +108,10 @@ async function run() {
        const result=await userCollection.updateOne({email:req.query.email},updateDoc);
        res.send(result)
     })
+    app.get('/users',async(req,res)=>{
+      const result=await userCollection.find().toArray();
+      res.send(result)
+    })
 
 
 
