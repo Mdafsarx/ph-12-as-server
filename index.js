@@ -62,17 +62,18 @@ async function run() {
       const result=await agreementCollectionAdmin.insertOne(req.body)
       res.send(result)
     })
-
     app.delete('/agreementAdmin',async(req,res)=>{
         const result=await agreementCollectionAdmin.deleteOne({_id:new ObjectId(req.query.id)});
         res.send(result)
     })
-
     app.put('/agreement',async(req,res)=>{
       const filter={email:req.query.email};
       const updateDoc={
         $set:{
-          status:req.body.status
+          status:req.body.status,
+          year1:req.body.year1,
+          mount1:req.body.mount1,
+          date1:req.body.date1,
         }
       }
       const result=await agreementCollection.updateOne(filter,updateDoc);
@@ -86,7 +87,11 @@ async function run() {
       const result=await agreementCollectionAdmin.find().toArray();
       res.send(result)
     })
-
+    app.get('/agreement/:email',async(req,res)=>{
+      console.log(req.params.email)
+      const result=await agreementCollection.findOne({email:req.params.email})
+      res.send(result);
+    })
 
 
 
@@ -119,6 +124,10 @@ async function run() {
     app.post('/announcement',async(req,res)=>{
        const result=await announcementCollection.insertOne(req.body);
        res.send(result)
+    })
+    app.get('/announcement',async(req,res)=>{
+      const result=await announcementCollection.find().toArray();
+      res.send(result)
     })
 
 
