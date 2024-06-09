@@ -22,7 +22,7 @@ app.use(
 
 
 
-const uri = "mongodb+srv://mdafsar99009:sF5mneEKKJ4d$.-@cluster0.zgmhkd0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PAS}@cluster0.zgmhkd0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -43,6 +43,7 @@ async function run() {
     const userCollection = client.db("onebuildDB").collection('user')
     const announcementCollection = client.db("onebuildDB").collection('announcement')
     const paymentCollection = client.db("onebuildDB").collection('payment')
+    const couponCollection = client.db("onebuildDB").collection('coupon')
 
 
     // payment
@@ -185,7 +186,15 @@ async function run() {
 
 
 
+    app.get('/coupon',async(req,res)=>{
+      const result=await couponCollection.find().toArray();
+      res.send(result);
+    })
 
+    app.post('/coupon',async(req,res)=>{
+      const result=await couponCollection.insertOne(req.body)
+      res.send(result)
+    })
 
 
 
