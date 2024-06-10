@@ -1,23 +1,33 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 require('dotenv').config();
 const app = express()
 const stripe = require("stripe")(process.env.DB_STRIPE)
 const port = process.env.PORT || 1000;
+
+
+
 app.use(cors());
 app.use(express.json())
-
-
-//Must remove "/" from your production URL
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       'https://resplendent-cranachan-4047db.netlify.app'
-    ]
+    ],
+    credentials: true
   })
 );
+
+
+
+
+
+
+
+
 
 
 
@@ -48,6 +58,46 @@ async function run() {
     const couponCollection = client.db("onebuildDB").collection('coupon')
 
 
+    // middleware
+    const verify = (req, res, next) => {
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "error" })
+      }
+      const token = req.headers.authorization
+
+      jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) => {
+        if (err) {
+          return res.status(403).send({ message: 'forbid access' })
+        }
+
+        req.user = decoded
+        next()
+      })
+    }
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.user.email;
+      const filter = { email: email }
+      const user = await userCollection.findOne(filter);
+      const admin = user?.userRole === 'admin'
+      console.log(user,admin)
+      if (!admin) {
+        return res.status(403).send({ message: "forbidden access" })
+      }
+      next()
+    }
+
+
+
+    // jwt
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_TOKEN);
+      res.send({ token })
+    })
+
+
+
     // payment
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
@@ -71,15 +121,15 @@ async function run() {
       const result = await paymentCollection.find({ email: req.params.email }).toArray();
       res.send(result)
     })
-    app.get('/findPayment',async(req,res)=>{
+    app.get('/findPayment', async (req, res) => {
       let query = {};
       if (req.query.search) {
         query = {
-          email:req.query.email,
+          email: req.query.email,
           month: { $regex: req.query.search, $options: "i" }
         }
       }
-      const result=await paymentCollection.find(query).toArray();
+      const result = await paymentCollection.find(query).toArray();
       res.send(result)
     })
 
@@ -119,7 +169,7 @@ async function run() {
       const result = await agreementCollectionAdmin.deleteOne({ _id: new ObjectId(req.query.id) });
       res.send(result)
     })
-    app.put('/agreement', async (req, res) => {
+    app.put('/agreement',  verify, verifyAdmin, async (req, res) => {
       const filter = { email: req.query.email };
       const updateDoc = {
         $set: {
@@ -157,7 +207,7 @@ async function run() {
       const result = await userCollection.insertOne(user)
       res.send(result)
     })
-    app.put('/user', async (req, res) => {
+    app.put('/user', verify, verifyAdmin, async (req, res) => {
       const updateDoc = {
         $set: {
           userRole: req.body.Role
@@ -174,7 +224,8 @@ async function run() {
 
 
     // announcement
-    app.post('/announcement', async (req, res) => {
+    app.post('/announcement', verify, verifyAdmin, async (req, res) => {
+
       const result = await announcementCollection.insertOne(req.body);
       res.send(result)
     })
@@ -188,13 +239,13 @@ async function run() {
 
 
 
-    app.get('/coupon',async(req,res)=>{
-      const result=await couponCollection.find().toArray();
+    app.get('/coupon', verify, verifyAdmin, async (req, res) => {
+      const result = await couponCollection.find().toArray();
       res.send(result);
     })
 
-    app.post('/coupon',async(req,res)=>{
-      const result=await couponCollection.insertOne(req.body)
+    app.post('/coupon', verify, verifyAdmin, async (req, res) => {
+      const result = await couponCollection.insertOne(req.body)
       res.send(result)
     })
 
