@@ -9,10 +9,13 @@ app.use(cors());
 app.use(express.json())
 
 
+//Must remove "/" from your production URL
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://cardoctor-bd.web.app",
+      "https://cardoctor-bd.firebaseapp.com",
     ]
   })
 );
