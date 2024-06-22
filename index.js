@@ -239,7 +239,7 @@ async function run() {
 
 
 
-    app.get('/coupon', verify, verifyAdmin, async (req, res) => {
+    app.get('/coupon', async (req, res) => {
       const result = await couponCollection.find().toArray();
       res.send(result);
     })
