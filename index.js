@@ -80,7 +80,7 @@ async function run() {
       const filter = { email: email }
       const user = await userCollection.findOne(filter);
       const admin = user?.userRole === 'admin'
-      console.log(user,admin)
+      console.log(user, admin)
       if (!admin) {
         return res.status(403).send({ message: "forbidden access" })
       }
@@ -138,7 +138,11 @@ async function run() {
 
     // apartment
     app.get('/apartment', async (req, res) => {
-      const result = await apartmentCollection.find().toArray();
+      let query = {}
+      if (req?.query?.search) {
+        query = { name: { $regex: req?.query?.search, $options: "i" }}
+      }
+      const result = await apartmentCollection.find(query).sort({rent: req?.query?.sort}).toArray();
       res.send(result)
     })
 
@@ -169,7 +173,7 @@ async function run() {
       const result = await agreementCollectionAdmin.deleteOne({ _id: new ObjectId(req.query.id) });
       res.send(result)
     })
-    app.put('/agreement',  verify, verifyAdmin, async (req, res) => {
+    app.put('/agreement', verify, verifyAdmin, async (req, res) => {
       const filter = { email: req.query.email };
       const updateDoc = {
         $set: {
